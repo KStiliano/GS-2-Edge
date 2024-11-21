@@ -372,7 +372,8 @@ void handleSensors() {
 Descrição: Lê os valores do sensor de temperatura e umidade (DHT22) e publica os dados no broker MQTT.
 <br>
 Etapas principais:
-<ul>Lê a temperatura e umidade.
+<ul>
+    <li>Lê a temperatura e umidade.</li>
     <li>Se os valores forem válidos (não NaN), publica nos tópicos MQTT correspondentes:</li>
         <ul>
             <li>Temperatura: /TEF/gaco001/attrs/t</li>
@@ -382,27 +383,50 @@ Etapas principais:
 
 <br>
 
+```c
+void getProximity() {
+    digitalWrite(TRIGGER_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIGGER_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIGGER_PIN, LOW);
 
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    proximidade = duration * 0.034 / 2;
+    Serial.print("Proximidade: ");
+    Serial.println(proximidade);
+    MQTT.publish(TOPICO_PUBLISH_4, String(proximidade).c_str());
+}
+```
+Descrição: Mede a proximidade utilizando o sensor ultrassônico (HC-SR04) e publica o valor no broker MQTT.
+<br>
+Como funciona:
+<ul>
+    <li>Emite um pulso pelo pino trigger.</li>
+    <li>Mede o tempo de retorno do pulso no pino echo.</li>
+    <li>Calcula a distância em centímetros.</li>
+    <li>Publica o valor calculado no tópico /TEF/gaco001/attrs/p.</li>
+</ul>
 
+<br>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```c
+void handleLuminosity() {
+    int ldrValue = analogRead(ldrPin);
+    luminosidade = map(ldrValue, 4095, 0, 0, 100);
+    Serial.print("Luminosidade: ");
+    Serial.println(luminosidade);
+    MQTT.publish(TOPICO_PUBLISH_5, String(luminosidade).c_str());
+}
+```
+Descrição: Lê o valor do LDR e publica a luminosidade calculada no broker MQTT.
+<br>
+Como funciona:
+<ul>
+    <li>Lê o valor analógico do LDR.</li>
+    <li>Converte o valor lido (0-4095) para uma escala percentual (0-100).</li>
+    <li>Publica o valor calculado no tópico /TEF/gaco001/attrs/l.</li>
+</ul>
 
 <hr>
  
