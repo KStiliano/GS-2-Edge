@@ -6,9 +6,9 @@
     <li>Kayky Silva Stiliano (RM555148)</li>
 </ul>
  
-<img src="path" alt="print do circuito ESP32/printscreen ESP32 circuit"/>
+<img src="https://github.com/KStiliano/GS-2-Edge/blob/main/esp32-sketch.png" alt="print do circuito ESP32/printscreen ESP32 circuit"/>
 
-Link da simulação no <a href="path">Wokwi</a>
+Link da simulação no <a href="https://wokwi.com/projects/414636569442592769">Wokwi</a>
 
 ## Explicação do Projeto 📖
 
@@ -85,7 +85,7 @@ const int default_BROKER_PORT = 1883;
 
 ---
 
-## Explicando o <a href="path">Código</a> 🧑‍💻
+## Explicando o <a href="https://github.com/KStiliano/GS-2-Edge/blob/main/main-esp32.cc">Código</a> 🧑‍💻
 ```c
 void setup() {
     // Inicializa os LEDs
@@ -430,4 +430,4 @@ Como funciona:
 
 <hr>
  
-<center>Este projeto encontra sob a <a href="path">MIT License.</a></center>
+<center>Este projeto encontra sob a <a href="https://github.com/KStiliano/GS-2-Edge/blob/main/LICENSE">MIT License.</a></center>
