@@ -267,15 +267,120 @@ Etapas principais:
 
 <br>
 
+```c
+void EnviaEstadoOutputMQTT() {
+    String msg = "s|" + String(EstadoSaida);
+    MQTT.publish(default_TOPICO_PUBLISH_1, msg.c_str());
+}
+```
+Descrição: Envia o estado atual do sistema (ligado/desligado) para o broker MQTT no tópico principal (/TEF/gaco001/attrs).
 
+<br>
 
+```c
+void controlaArCondicionado() {
+    if (temperatura > 25) {
+        digitalWrite(led_green, HIGH); 
+        Serial.println("-> Ar-condicionado ligado (LED verde ON).");
+    } else {
+        digitalWrite(led_green, LOW); 
+        Serial.println("-> Ar-condicionado desligado (LED verde OFF).");
+    }
+}
+```
+Descrição: Liga/desliga o ar-condicionado com base na temperatura.
+<br>
+Como funciona: Se a temperatura for maior que 25°C o LED verde é ligado (indicando que o ar-condicionado está ligado). Caso contrário, desliga o LED verde.
 
+<br>
 
+```c
+void controlaUmidificador() {
+    if (umidade < 40) {
+        digitalWrite(led_cyan, HIGH); 
+        Serial.println("-> Umidificador ligado (LED ciano ON).");
+    } else {
+        digitalWrite(led_cyan, LOW); 
+        Serial.println("-> Umidificador desligado (LED ciano OFF).");
+    }
+}
+```
+Descrição: Liga/desliga o umidificador com base na umidade.
+<br>
+Como funciona: Se a umidade for menor que 40% o LED ciano é ligado (indicando que o umidificador está ligado). Caso contrário, desliga o LED ciano.
 
+<br>
 
+```c
+void controlaEnergia() {
+    // Desliga todos os LEDs de energia
+    digitalWrite(led_white, LOW);
+    digitalWrite(led_orange, LOW);
 
+    if (luminosidade > 70) {
+        digitalWrite(led_orange, HIGH); 
+        Serial.println("-> Energia solar ativada (LED laranja ON).");
+    } else if (luminosidade > 40) {
+        digitalWrite(led_white, HIGH);
+        Serial.println("-> Energia eólica ativada (LED branco ON).");
+    } else {
+        Serial.println("-> Energia elétrica padrão ativada.");
+    }
+}
+```
+Descrição: Define o tipo de energia (solar, eólica ou elétrica padrão) com base na luminosidade.
+<br>
+Como funciona: Se a luminosidade for maior que 70 o LED laranja é ligado (indicando energia solar ligada). Se a luminosidade estiver entre 40 e 70, o LED branco é ligado (indicando energia eólica ligada).
+Se a luminosidade for menor que 40, nenhum LED de energia é ligado (energia elétrica padrão é usada).
 
+<br>
 
+```c
+void controlaLampada() {
+    if (proximidade < 60) {
+        digitalWrite(led_yellow, HIGH); 
+        Serial.println("-> Lâmpada ligada (LED amarelo ON).");
+    } else {
+        digitalWrite(led_yellow, LOW); 
+        Serial.println("-> Lâmpada desligada (LED amarelo OFF).");
+    }
+}
+```
+Descrição: Liga/desliga a lâmpada com base na proximidade.
+<br>
+Como funciona: Se a proximidade for menor que 60 cm, o LED amarelo é ligado (indicando que a lâmpada está ligada). Caso contrário, desliga o LED amarelo.
+
+<br>
+
+```c
+void handleSensors() {
+    // Temperatura e umidade
+    float temperature = dht.readTemperature();
+    float humidity = dht.readHumidity();
+    if (!isnan(temperature)) {
+        Serial.print("Temperatura: ");
+        Serial.println(temperature);
+        MQTT.publish(TOPICO_PUBLISH_2, String(temperature).c_str());
+    }
+    if (!isnan(humidity)) {
+        Serial.print("Umidade: ");
+        Serial.println(humidity);
+        MQTT.publish(TOPICO_PUBLISH_3, String(humidity).c_str());
+    }
+}
+```
+Descrição: Lê os valores do sensor de temperatura e umidade (DHT22) e publica os dados no broker MQTT.
+<br>
+Etapas principais:
+<ul>Lê a temperatura e umidade.
+    <li>Se os valores forem válidos (não NaN), publica nos tópicos MQTT correspondentes:</li>
+        <ul>
+            <li>Temperatura: /TEF/gaco001/attrs/t</li>
+            <li>Umidade: /TEF/gaco001/attrs/h</li>
+        </ul>
+</ul>
+
+<br>
 
 
 
