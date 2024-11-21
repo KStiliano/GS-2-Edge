@@ -118,7 +118,8 @@ void setup() {
     MQTT.publish(default_TOPICO_PUBLISH_1, "s|on");
 }
 ```
-Descrição: Configura os pinos de entrada/saída, inicializa os sensores, conecta ao Wi-Fi e MQTT, e configura o sistema para começar o monitoramento. 
+Descrição: Configura os pinos de entrada/saída, inicializa os sensores, conecta ao Wi-Fi e MQTT, e configura o sistema para começar o monitoramento.
+<br>
 Etapas principais:
 <ul>
     <li>Configura todos os LEDs como saídas e os sensores como entradas.</li> 
@@ -139,6 +140,7 @@ void initWiFi() {
 }
 ```
 Descrição: Conecta o ESP32 à rede Wi-Fi definida nas constantes.
+<br>
 Etapas principais:
 <ul>
     <li>Mostra no monitor serial que a conexão está sendo estabelecida.</li>
@@ -155,6 +157,7 @@ void initMQTT() {
 }
 ```
 Descrição: Configura o cliente MQTT com o broker especificado e define a função de callback para lidar com mensagens recebidas.
+<br>
 Etapas principais:
 <ul>
     <li>Configura o endereço do broker e a porta.</li>
@@ -196,6 +199,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 }
 ```
 Descrição: Processa mensagens recebidas via MQTT.
+<br>
 Como funciona:
 <ul>
     <li>Constrói a mensagem recebida transformando o payload em uma string.</li>
@@ -217,6 +221,7 @@ void VerificaConexoesWiFIEMQTT() {
 }
 ```
 Descrição: Garante que o ESP32 esteja conectado ao Wi-Fi e ao broker MQTT.
+<br>
 Como funciona:
 <ul>
     <li>Se o Wi-Fi estiver desconectado, tenta reconectar chamando reconectWiFi().</li>
@@ -252,6 +257,7 @@ void reconnectMQTT() {
 }
 ```
 Descrição: Tenta reconectar ao broker MQTT até obter sucesso.
+<br>
 Etapas principais:
 <ul>
     <li>Tenta conectar com o ID MQTT configurado.</li>
