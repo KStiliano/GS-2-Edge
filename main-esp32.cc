@@ -54,6 +54,12 @@ int temperatura = 0;
 int umidade = 0;
 int proximidade = 0;
 
+bool estadoLedGreen = false;
+bool estadoLedCyan = false;
+bool estadoLedWhite = false;
+bool estadoLedOrange = false;
+bool estadoLedYellow = false;
+
 void initSerial() {
     Serial.begin(115200);
 }
@@ -88,11 +94,9 @@ void setup() {
     pinMode(led_yellow, OUTPUT);
     pinMode(led_green, OUTPUT);
     pinMode(D4, OUTPUT);
-
     // Configurações dos sensores
     pinMode(TRIGGER_PIN, OUTPUT);
     pinMode(ECHO_PIN, INPUT);
-
     // Desliga todos os LEDs no início
     digitalWrite(led_white, LOW);
     digitalWrite(led_orange, LOW);
@@ -100,27 +104,29 @@ void setup() {
     digitalWrite(led_yellow, LOW);
     digitalWrite(led_green, LOW);
     digitalWrite(D4, HIGH);
-
     InitOutput();
     initSerial();
     initWiFi();
     initMQTT();
     dht.begin();
-
     delay(5000);
     MQTT.publish(default_TOPICO_PUBLISH_1, "s|on");
 }
 
 void loop() {
     VerificaConexoesWiFIEMQTT();
-    handleSensors();
-    getProximity();
-    handleLuminosity();
-    EnviaEstadoOutputMQTT();
-    MQTT.loop();
+    handleSensors();    
+    getProximity();        
+    handleLuminosity();     
+    controlaArCondicionado();
+    controlaUmidificador();
+    controlaEnergia();
+    controlaLampada();
+    EnviaEstadoOutputMQTT(); 
+    MQTT.loop();             
+    delay(100);
 }
 
-// Função de reconexão Wi-Fi
 void reconectWiFi() {
     if (WiFi.status() == WL_CONNECTED) return;
     WiFi.begin(default_SSID, default_PASSWORD);
@@ -134,7 +140,6 @@ void reconectWiFi() {
     Serial.println(WiFi.localIP());
 }
 
-// Função para reconectar ao broker MQTT
 void VerificaConexoesWiFIEMQTT() {
     if (!MQTT.connected()) reconnectMQTT();
     reconectWiFi();
@@ -165,7 +170,6 @@ void reconnectMQTT() {
     }
 }
 
-// Função de callback MQTT
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     String msg;
     for (int i = 0; i < length; i++) {
@@ -175,96 +179,83 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(topic);
     Serial.print(": ");
     Serial.println(msg);
-    // Verifica o tipo de mensagem recebida
     if (String(topic) == "/TEF/gaco001/attrs/t") {
-        temperatura = msg.toFloat();
-        controlaArCondicionado();
-        delay(1500);
+        temperatura = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/h") {
-        umidade = msg.toFloat();
-        controlaUmidificador();
-        delay(1500);
+        umidade = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/p") {
-        proximidade = msg.toFloat();
-        controlaLampada();
-        delay(1500);
+        proximidade = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/l") {
         luminosidade = msg.toInt();
-        controlaEnergia();
-        delay(1500);
     } else {
         Serial.println("Mensagem desconhecida.");
     }
+    delay(1500);
 }
 
-// Função para controlar o ar-condicionado
 void controlaArCondicionado() {
-    if (temperatura > 25) {
-        digitalWrite(led_green, HIGH); 
-        Serial.println("-> Ar-condicionado ligado (LED verde ON).");
-    } else {
-        digitalWrite(led_green, LOW); 
-        Serial.println("-> Ar-condicionado desligado (LED verde OFF).");
+    bool novoEstado = (temperatura > 30);
+    if (estadoLedGreen != novoEstado) {   
+        estadoLedGreen = novoEstado;      
+        digitalWrite(led_green, estadoLedGreen ? HIGH : LOW); 
     }
+    Serial.println(estadoLedGreen ? "Ar-condicionado ligado." : "Ar-condicionado desligado.");
 }
 
-// Função para controlar o umidificador
 void controlaUmidificador() {
-    if (umidade < 40) {
-        digitalWrite(led_cyan, HIGH); 
-        Serial.println("-> Umidificador ligado (LED ciano ON).");
-    } else {
-        digitalWrite(led_cyan, LOW); 
-        Serial.println("-> Umidificador desligado (LED ciano OFF).");
+    bool novoEstado = (umidade < 40); 
+    if (estadoLedCyan != novoEstado) { 
+        estadoLedCyan = novoEstado;     
+        digitalWrite(led_cyan, estadoLedCyan ? HIGH : LOW); 
     }
+    Serial.println(estadoLedCyan ? "Umidificador ligado." : "Umidificador desligado.");
 }
 
-// Função para controlar o tipo de energia
 void controlaEnergia() {
-    // Desliga todos os LEDs de energia
-    digitalWrite(led_white, LOW);
-    digitalWrite(led_orange, LOW);
-
-    if (luminosidade > 70) {
-        digitalWrite(led_orange, HIGH); 
-        Serial.println("-> Energia solar ativada (LED laranja ON).");
-    } else if (luminosidade > 40) {
-        digitalWrite(led_white, HIGH);
-        Serial.println("-> Energia eólica ativada (LED branco ON).");
-    } else {
-        Serial.println("-> Energia elétrica padrão ativada.");
+    bool novoEstadoWhite = (luminosidade > 40 && luminosidade <= 70);
+    bool novoEstadoOrange = (luminosidade > 70);
+    if (estadoLedWhite != novoEstadoWhite) {
+        estadoLedWhite = novoEstadoWhite;
+        digitalWrite(led_white, estadoLedWhite ? HIGH : LOW);
     }
+    if (estadoLedOrange != novoEstadoOrange) {
+        estadoLedOrange = novoEstadoOrange;
+        digitalWrite(led_orange, estadoLedOrange ? HIGH : LOW);
+    }
+    Serial.print("Energia eólica: ");
+    Serial.println(estadoLedWhite ? "Ativada" : "Desativada");
+    Serial.print("Energia solar: ");
+    Serial.println(estadoLedOrange ? "Ativada" : "Desativada");
 }
 
-// Função para controlar a lâmpada
 void controlaLampada() {
-    if (proximidade < 60) {
-        digitalWrite(led_yellow, HIGH); 
-        Serial.println("-> Lâmpada ligada (LED amarelo ON).");
-    } else {
-        digitalWrite(led_yellow, LOW); 
-        Serial.println("-> Lâmpada desligada (LED amarelo OFF).");
+    bool novoEstado = (proximidade < 60);
+    if (estadoLedYellow != novoEstado) {
+        estadoLedYellow = novoEstado;
+        digitalWrite(led_yellow, estadoLedYellow ? HIGH : LOW);
     }
+    Serial.println(estadoLedYellow ? "Lâmpada ligada." : "Lâmpada desligada.");
 }
 
-// Função para lidar com sensores
 void handleSensors() {
-    // Temperatura e umidade
     float temperature = dht.readTemperature();
     float humidity = dht.readHumidity();
     if (!isnan(temperature)) {
+        temperatura = temperature; 
+        MQTT.publish(TOPICO_PUBLISH_2, String(temperature).c_str());
+        controlaArCondicionado(); 
         Serial.print("Temperatura: ");
         Serial.println(temperature);
-        MQTT.publish(TOPICO_PUBLISH_2, String(temperature).c_str());
     }
     if (!isnan(humidity)) {
+        umidade = humidity; 
+        MQTT.publish(TOPICO_PUBLISH_3, String(humidity).c_str());
+        controlaUmidificador(); 
         Serial.print("Umidade: ");
         Serial.println(humidity);
-        MQTT.publish(TOPICO_PUBLISH_3, String(humidity).c_str());
     }
 }
 
-// Função de leitura de proximidade
 void getProximity() {
     digitalWrite(TRIGGER_PIN, LOW);
     delayMicroseconds(2);
@@ -279,7 +270,6 @@ void getProximity() {
     MQTT.publish(TOPICO_PUBLISH_4, String(proximidade).c_str());
 }
 
-// Função de controle de luminosidade
 void handleLuminosity() {
     int ldrValue = analogRead(ldrPin);
     luminosidade = map(ldrValue, 4095, 0, 0, 100);
@@ -288,7 +278,6 @@ void handleLuminosity() {
     MQTT.publish(TOPICO_PUBLISH_5, String(luminosidade).c_str());
 }
 
-// Envia o estado de saída via MQTT
 void EnviaEstadoOutputMQTT() {
     String msg = "s|" + String(EstadoSaida);
     MQTT.publish(default_TOPICO_PUBLISH_1, msg.c_str());
