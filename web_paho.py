@@ -32,36 +32,32 @@ def on_connect(client, userdata, flags, rc):
 
 
 def on_message(client, userdata, msg):
-    global ultimo_valor_l, ultimo_valor_p, ultimo_valor_h, ultimo_valor_l
+    global ultimo_valor_l, ultimo_valor_p, ultimo_valor_h, ultimo_valor_t
     try:
         payload = msg.payload.decode('utf-8')
 
         if msg.topic == MQTT_TOPIC_L:
-            ultimo_valor_l = int(payload)
+            ultimo_valor_l = float(payload)
             socketio.emit('novo_dado_l', {'valor': ultimo_valor_l})
-            print("l", msg.topic, ultimo_valor_l)
+            print("Luminosidade recebida:", ultimo_valor_l)
 
         elif msg.topic == MQTT_TOPIC_P:
-            ultimo_valor_p = int(payload)
+            ultimo_valor_p = float(payload)
             socketio.emit('novo_dado_p', {'valor': ultimo_valor_p})
-            print("p", msg.topic, ultimo_valor_p)
+            print("Proximidade recebida:", ultimo_valor_p)
 
         elif msg.topic == MQTT_TOPIC_H:
-            ultimo_valor_h = int(payload)
+            ultimo_valor_h = float(payload)
             socketio.emit('novo_dado_h', {'valor': ultimo_valor_h})
-            print("h", msg.topic, ultimo_valor_h)
+            print("Umidade recebida:", ultimo_valor_h)
 
         elif msg.topic == MQTT_TOPIC_T:
-            ultimo_valor_t = int(payload)
+            ultimo_valor_t = float(payload)
             socketio.emit('novo_dado_t', {'valor': ultimo_valor_t})
-            print("t", msg.topic, ultimo_valor_t)
+            print("Temperatura recebida:", ultimo_valor_t)
 
-    except IndexError:
-        print("Falha ao index")
-    except json.JSONDecodeError:
-        print("Falha ao decodificar JSON")
-    except Exception:
-        print('Algo de errado aconteceu...')
+    except Exception as e:
+        print(f"Erro no processamento da mensagem: {e}")
 
 
 # Configura o cliente MQTT e conecta
@@ -108,162 +104,108 @@ def index():
             <div class="container">
                 <h1 class="mt-5 text-center">Sensores</h1>
                 <div class="chart-container">
-
                     <div class="text-center">
                         <h3>Luminosidade</h3>
                         <canvas id="gauge-l" width="300" height="300"></canvas>
                         <div id="valor-l">Aguardando dados...</div>
                     </div>
-
                     <div class="text-center">
                         <h3>Proximidade</h3>
                         <canvas id="gauge-p" width="300" height="300"></canvas>
                         <div id="valor-p">Aguardando dados...</div>
                     </div>
-
                     <div class="text-center">
                         <h3>Umidade</h3>
                         <canvas id="gauge-h" width="300" height="300"></canvas>
                         <div id="valor-h">Aguardando dados...</div>
                     </div>
-
                     <div class="text-center">
                         <h3>Temperatura</h3>
                         <canvas id="gauge-t" width="300" height="300"></canvas>
                         <div id="valor-t">Aguardando dados...</div>
                     </div>
-
-
                 </div>
             </div>
-
             <script>
-                var ctxPot = document.getElementById('gauge-l').getContext('2d');
-                var gaugeChartPot = new Chart(ctxPot, {
+                var gaugeChartLuminosidade = new Chart(document.getElementById('gauge-l').getContext('2d'), {
                     type: 'doughnut',
                     data: {
                         labels: ['Luminosidade', 'Restante'],
                         datasets: [{
-                            label: 'Luminosidade',
                             data: [0, 100],
-                            backgroundColor: ['#36A2EB', '#E0E0E0'],
-                            borderWidth: 1,
+                            backgroundColor: ['#36A2EB', '#E0E0E0']
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        cutoutPercentage: 70,
-                        animation: {
-                            animateRotate: true,
-                        }
-                    }
+                    options: { responsive: true, cutout: '70%' }
                 });
 
-                var ctxTemp = document.getElementById('gauge-p').getContext('2d');
-                var gaugeChartTemp = new Chart(ctxTemp, {
+                var gaugeChartProximidade = new Chart(document.getElementById('gauge-p').getContext('2d'), {
                     type: 'doughnut',
                     data: {
                         labels: ['Proximidade', 'Restante'],
                         datasets: [{
-                            label: 'Proximidade',
-                            data: [0, 80],
-                            backgroundColor: ['#FF6384', '#E0E0E0'],
-                            borderWidth: 1,
+                            data: [0, 400],
+                            backgroundColor: ['#FF6384', '#E0E0E0']
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        cutoutPercentage: 70,
-                        animation: {
-                            animateRotate: true,
-                        }
-                    }
+                    options: { responsive: true, cutout: '70%' }
                 });
 
-                var ctxTemp = document.getElementById('gauge-h').getContext('2d');
-                var gaugeChartTemp = new Chart(ctxTemp, {
+                var gaugeChartUmidade = new Chart(document.getElementById('gauge-h').getContext('2d'), {
                     type: 'doughnut',
                     data: {
-                        labels: ['Uumidade', 'Restante'],
+                        labels: ['Umidade', 'Restante'],
                         datasets: [{
-                            label: 'Uumidade',
-                            data: [0, 80],
-                            backgroundColor: ['#FF6384', '#E0E0E0'],
-                            borderWidth: 1,
+                            data: [0, 100],
+                            backgroundColor: ['#4CAF50', '#E0E0E0']
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        cutoutPercentage: 70,
-                        animation: {
-                            animateRotate: true,
-                        }
-                    }
+                    options: { responsive: true, cutout: '70%' }
                 });
 
-                var ctxTemp = document.getElementById('gauge-t').getContext('2d');
-                var gaugeChartTemp = new Chart(ctxTemp, {
+                var gaugeChartTemperatura = new Chart(document.getElementById('gauge-t').getContext('2d'), {
                     type: 'doughnut',
                     data: {
                         labels: ['Temperatura', 'Restante'],
                         datasets: [{
-                            label: 'Temperatura',
                             data: [0, 80],
-                            backgroundColor: ['#FF6384', '#E0E0E0'],
-                            borderWidth: 1,
+                            backgroundColor: ['#FF9F40', '#E0E0E0']
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        cutoutPercentage: 70,
-                        animation: {
-                            animateRotate: true,
-                        }
-                    }
+                    options: { responsive: true, cutout: '70%' }
                 });
-
 
                 $(document).ready(function() {
                     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
                     socket.on('novo_dado_l', function(data) {
-                        $('#valor-potenciometro').text('Luminosidade: ' + data.valor + ' %');
-
-                        gaugeChartPot.data.datasets[0].data[0] = data.valor;
-                        gaugeChartPot.data.datasets[0].data[1] = 100 - data.valor;
-                        gaugeChartPot.update();
+                        $('#valor-l').text('Luminosidade: ' + data.valor + ' %');
+                        gaugeChartLuminosidade.data.datasets[0].data = [data.valor, 100 - data.valor];
+                        gaugeChartLuminosidade.update();
                     });
 
                     socket.on('novo_dado_p', function(data) {
-                        $('#valor-proximidade').text('Proximidade: ' + data.valor);
-
-                        gaugeChartTemp.data.datasets[0].data[0] = data.valor + 40;
-                        gaugeChartTemp.data.datasets[0].data[1] = 80 - data.valor;
-                        gaugeChartTemp.update();
+                        $('#valor-p').text('Proximidade: ' + data.valor);
+                        gaugeChartProximidade.data.datasets[0].data = [data.valor, 400 - data.valor];
+                        gaugeChartProximidade.update();
                     });
 
                     socket.on('novo_dado_h', function(data) {
-                        $('#valor-humidade').text('Umidade: ' + data.valor + ' %');
-
-                        gaugeChartTemp.data.datasets[0].data[0] = data.valor + 40;
-                        gaugeChartTemp.data.datasets[0].data[1] = 80 - data.valor;
-                        gaugeChartTemp.update();
+                        $('#valor-h').text('Umidade: ' + data.valor + ' %');
+                        gaugeChartUmidade.data.datasets[0].data = [data.valor, 100 - data.valor];
+                        gaugeChartUmidade.update();
                     });
 
                     socket.on('novo_dado_t', function(data) {
-                        $('#valor-temperatura').text('Temperatura: ' + data.valor + ' °C');
-
-                        gaugeChartTemp.data.datasets[0].data[0] = data.valor + 40;
-                        gaugeChartTemp.data.datasets[0].data[1] = 80 - data.valor;
-                        gaugeChartTemp.update();
+                        $('#valor-t').text('Temperatura: ' + data.valor + ' °C');
+                        gaugeChartTemperatura.data.datasets[0].data = [data.valor, 80 - data.valor];
+                        gaugeChartTemperatura.update();
                     });
-
                 });
             </script>
         </body>
         </html>
     ''')
-
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
