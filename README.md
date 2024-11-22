@@ -10,7 +10,7 @@
 
 Link da simulação no <a href="https://wokwi.com/projects/414636569442592769">Wokwi</a>
 <br>
-Link do video no <a href="path">YouTube</a>
+Link do video no <a href="https://www.youtube.com/watch?v=RWXaAgimxD8">YouTube</a>
 
 ## Explicação do Projeto 📖
 
