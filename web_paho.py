@@ -21,7 +21,6 @@ ultimo_valor_p = None
 ultimo_valor_h = None
 ultimo_valor_t = None
 
-
 # Funções de callback do MQTT
 def on_connect(client, userdata, flags, rc):
     print("Conectado com código de resultado " + str(rc))
@@ -29,7 +28,6 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(MQTT_TOPIC_P)
     client.subscribe(MQTT_TOPIC_H)
     client.subscribe(MQTT_TOPIC_T)
-
 
 def on_message(client, userdata, msg):
     global ultimo_valor_l, ultimo_valor_p, ultimo_valor_h, ultimo_valor_t
@@ -58,7 +56,6 @@ def on_message(client, userdata, msg):
 
     except Exception as e:
         print(f"Erro no processamento da mensagem: {e}")
-
 
 # Configura o cliente MQTT e conecta
 client = mqtt.Client()
@@ -133,7 +130,7 @@ def index():
                         labels: ['Luminosidade', 'Restante'],
                         datasets: [{
                             data: [0, 100],
-                            backgroundColor: ['#36A2EB', '#E0E0E0']
+                            backgroundColor: ['#FF4D00', '#E0E0E0']
                         }]
                     },
                     options: { responsive: true, cutout: '70%' }
@@ -145,7 +142,7 @@ def index():
                         labels: ['Proximidade', 'Restante'],
                         datasets: [{
                             data: [0, 400],
-                            backgroundColor: ['#FF6384', '#E0E0E0']
+                            backgroundColor: ['#FFDE21', '#E0E0E0']
                         }]
                     },
                     options: { responsive: true, cutout: '70%' }
@@ -157,7 +154,7 @@ def index():
                         labels: ['Umidade', 'Restante'],
                         datasets: [{
                             data: [0, 100],
-                            backgroundColor: ['#4CAF50', '#E0E0E0']
+                            backgroundColor: ['#00FFFF', '#E0E0E0']
                         }]
                     },
                     options: { responsive: true, cutout: '70%' }
@@ -169,7 +166,7 @@ def index():
                         labels: ['Temperatura', 'Restante'],
                         datasets: [{
                             data: [0, 80],
-                            backgroundColor: ['#FF9F40', '#E0E0E0']
+                            backgroundColor: ['#008000', '#E0E0E0']
                         }]
                     },
                     options: { responsive: true, cutout: '70%' }
