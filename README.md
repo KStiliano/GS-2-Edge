@@ -431,7 +431,3 @@ Como funciona:
 <hr>
  
 <center>Este projeto encontra sob a <a href="https://github.com/KStiliano/GS-2-Edge/blob/main/LICENSE">MIT License.</a></center>
-
-
-
-
