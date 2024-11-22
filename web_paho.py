@@ -72,7 +72,6 @@ client.on_message = on_message
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_start()
 
-
 @app.route('/')
 def index():
     return render_template_string('''
@@ -117,13 +116,13 @@ def index():
                     </div>
 
                     <div class="text-center">
-                        <h3>Proximidadec</h3>
+                        <h3>Proximidade</h3>
                         <canvas id="gauge-p" width="300" height="300"></canvas>
                         <div id="valor-p">Aguardando dados...</div>
                     </div>
 
                     <div class="text-center">
-                        <h3>Humidade</h3>
+                        <h3>Umidade</h3>
                         <canvas id="gauge-h" width="300" height="300"></canvas>
                         <div id="valor-h">Aguardando dados...</div>
                     </div>
@@ -185,9 +184,9 @@ def index():
                 var gaugeChartTemp = new Chart(ctxTemp, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Humidade', 'Restante'],
+                        labels: ['Uumidade', 'Restante'],
                         datasets: [{
-                            label: 'Humidade',
+                            label: 'Uumidade',
                             data: [0, 80],
                             backgroundColor: ['#FF6384', '#E0E0E0'],
                             borderWidth: 1,
@@ -244,7 +243,7 @@ def index():
                     });
 
                     socket.on('novo_dado_h', function(data) {
-                        $('#valor-humidade').text('Humidade: ' + data.valor + ' %');
+                        $('#valor-humidade').text('Umidade: ' + data.valor + ' %');
 
                         gaugeChartTemp.data.datasets[0].data[0] = data.valor + 40;
                         gaugeChartTemp.data.datasets[0].data[1] = 80 - data.valor;
@@ -267,4 +266,4 @@ def index():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
