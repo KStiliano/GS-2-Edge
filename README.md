@@ -97,11 +97,9 @@ void setup() {
     pinMode(led_yellow, OUTPUT);
     pinMode(led_green, OUTPUT);
     pinMode(D4, OUTPUT);
-
     // Configurações dos sensores
     pinMode(TRIGGER_PIN, OUTPUT);
     pinMode(ECHO_PIN, INPUT);
-
     // Desliga todos os LEDs no início
     digitalWrite(led_white, LOW);
     digitalWrite(led_orange, LOW);
@@ -109,13 +107,11 @@ void setup() {
     digitalWrite(led_yellow, LOW);
     digitalWrite(led_green, LOW);
     digitalWrite(D4, HIGH);
-
     InitOutput();
     initSerial();
     initWiFi();
     initMQTT();
     dht.begin();
-
     delay(5000);
     MQTT.publish(default_TOPICO_PUBLISH_1, "s|on");
 }
@@ -178,26 +174,18 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(topic);
     Serial.print(": ");
     Serial.println(msg);
-    // Verifica o tipo de mensagem recebida
     if (String(topic) == "/TEF/gaco001/attrs/t") {
-        temperatura = msg.toFloat();
-        controlaArCondicionado();
-        delay(1500);
+        temperatura = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/h") {
-        umidade = msg.toFloat();
-        controlaUmidificador();
-        delay(1500);
+        umidade = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/p") {
-        proximidade = msg.toFloat();
-        controlaLampada();
-        delay(1500);
+        proximidade = msg.toInt();
     } else if (String(topic) == "/TEF/gaco001/attrs/l") {
         luminosidade = msg.toInt();
-        controlaEnergia();
-        delay(1500);
     } else {
         Serial.println("Mensagem desconhecida.");
     }
+    delay(1500);
 }
 ```
 Descrição: Processa mensagens recebidas via MQTT.
@@ -281,13 +269,12 @@ Descrição: Envia o estado atual do sistema (ligado/desligado) para o broker MQ
 
 ```c
 void controlaArCondicionado() {
-    if (temperatura > 25) {
-        digitalWrite(led_green, HIGH); 
-        Serial.println("-> Ar-condicionado ligado (LED verde ON).");
-    } else {
-        digitalWrite(led_green, LOW); 
-        Serial.println("-> Ar-condicionado desligado (LED verde OFF).");
+    bool novoEstado = (temperatura > 30);
+    if (estadoLedGreen != novoEstado) {   
+        estadoLedGreen = novoEstado;      
+        digitalWrite(led_green, estadoLedGreen ? HIGH : LOW); 
     }
+    Serial.println(estadoLedGreen ? "Ar-condicionado ligado." : "Ar-condicionado desligado.");
 }
 ```
 Descrição: Liga/desliga o ar-condicionado com base na temperatura.
@@ -298,13 +285,12 @@ Como funciona: Se a temperatura for maior que 25°C o LED verde é ligado (indic
 
 ```c
 void controlaUmidificador() {
-    if (umidade < 40) {
-        digitalWrite(led_cyan, HIGH); 
-        Serial.println("-> Umidificador ligado (LED ciano ON).");
-    } else {
-        digitalWrite(led_cyan, LOW); 
-        Serial.println("-> Umidificador desligado (LED ciano OFF).");
+    bool novoEstado = (umidade < 40); 
+    if (estadoLedCyan != novoEstado) { 
+        estadoLedCyan = novoEstado;     
+        digitalWrite(led_cyan, estadoLedCyan ? HIGH : LOW); 
     }
+    Serial.println(estadoLedCyan ? "Umidificador ligado." : "Umidificador desligado.");
 }
 ```
 Descrição: Liga/desliga o umidificador com base na umidade.
@@ -315,19 +301,20 @@ Como funciona: Se a umidade for menor que 40% o LED ciano é ligado (indicando q
 
 ```c
 void controlaEnergia() {
-    // Desliga todos os LEDs de energia
-    digitalWrite(led_white, LOW);
-    digitalWrite(led_orange, LOW);
-
-    if (luminosidade > 70) {
-        digitalWrite(led_orange, HIGH); 
-        Serial.println("-> Energia solar ativada (LED laranja ON).");
-    } else if (luminosidade > 40) {
-        digitalWrite(led_white, HIGH);
-        Serial.println("-> Energia eólica ativada (LED branco ON).");
-    } else {
-        Serial.println("-> Energia elétrica padrão ativada.");
+    bool novoEstadoWhite = (luminosidade > 40 && luminosidade <= 70);
+    bool novoEstadoOrange = (luminosidade > 70);
+    if (estadoLedWhite != novoEstadoWhite) {
+        estadoLedWhite = novoEstadoWhite;
+        digitalWrite(led_white, estadoLedWhite ? HIGH : LOW);
     }
+    if (estadoLedOrange != novoEstadoOrange) {
+        estadoLedOrange = novoEstadoOrange;
+        digitalWrite(led_orange, estadoLedOrange ? HIGH : LOW);
+    }
+    Serial.print("Energia eólica: ");
+    Serial.println(estadoLedWhite ? "Ativada" : "Desativada");
+    Serial.print("Energia solar: ");
+    Serial.println(estadoLedOrange ? "Ativada" : "Desativada");
 }
 ```
 Descrição: Define o tipo de energia (solar, eólica ou elétrica padrão) com base na luminosidade.
@@ -339,13 +326,12 @@ Se a luminosidade for menor que 40, nenhum LED de energia é ligado (energia el�
 
 ```c
 void controlaLampada() {
-    if (proximidade < 60) {
-        digitalWrite(led_yellow, HIGH); 
-        Serial.println("-> Lâmpada ligada (LED amarelo ON).");
-    } else {
-        digitalWrite(led_yellow, LOW); 
-        Serial.println("-> Lâmpada desligada (LED amarelo OFF).");
+    bool novoEstado = (proximidade < 60);
+    if (estadoLedYellow != novoEstado) {
+        estadoLedYellow = novoEstado;
+        digitalWrite(led_yellow, estadoLedYellow ? HIGH : LOW);
     }
+    Serial.println(estadoLedYellow ? "Lâmpada ligada." : "Lâmpada desligada.");
 }
 ```
 Descrição: Liga/desliga a lâmpada com base na proximidade.
@@ -356,20 +342,24 @@ Como funciona: Se a proximidade for menor que 60 cm, o LED amarelo é ligado (in
 
 ```c
 void handleSensors() {
-    // Temperatura e umidade
     float temperature = dht.readTemperature();
     float humidity = dht.readHumidity();
     if (!isnan(temperature)) {
+        temperatura = temperature; 
+        MQTT.publish(TOPICO_PUBLISH_2, String(temperature).c_str());
+        controlaArCondicionado(); 
         Serial.print("Temperatura: ");
         Serial.println(temperature);
-        MQTT.publish(TOPICO_PUBLISH_2, String(temperature).c_str());
     }
     if (!isnan(humidity)) {
+        umidade = humidity; 
+        MQTT.publish(TOPICO_PUBLISH_3, String(humidity).c_str());
+        controlaUmidificador(); 
         Serial.print("Umidade: ");
         Serial.println(humidity);
-        MQTT.publish(TOPICO_PUBLISH_3, String(humidity).c_str());
     }
 }
+
 ```
 Descrição: Lê os valores do sensor de temperatura e umidade (DHT22) e publica os dados no broker MQTT.
 <br>
