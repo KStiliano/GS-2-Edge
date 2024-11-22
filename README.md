@@ -9,6 +9,8 @@
 <img src="https://github.com/KStiliano/GS-2-Edge/blob/main/esp32-sketch.png" alt="print do circuito ESP32/printscreen ESP32 circuit"/>
 
 Link da simulação no <a href="https://wokwi.com/projects/414636569442592769">Wokwi</a>
+<br>
+Link do video no <a href="path">YouTube</a>
 
 ## Explicação do Projeto 📖
 
